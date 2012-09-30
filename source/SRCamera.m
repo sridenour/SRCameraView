@@ -49,6 +49,11 @@
 	return camera;
 }
 
+- (id)init
+{
+	return [self initWithCameraPosition:AVCaptureDevicePositionBack];
+}
+
 - (id)initWithCaptureDevice:(AVCaptureDevice *)captureDevice
 {
 	if(captureDevice == nil) {
@@ -59,7 +64,7 @@
 		NSError *error = nil;
 		AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
 		if(error != nil) {
-			self = nil;
+			return nil;
 		} else {
 			_deviceInput = input;
 			
@@ -100,11 +105,6 @@
 	}
 	
 	return [self initWithCaptureDevice:captureDevice];
-}
-
-- (void)dealloc
-{
-	_deviceInput = nil;
 }
 
 #pragma mark - Setters & Getters

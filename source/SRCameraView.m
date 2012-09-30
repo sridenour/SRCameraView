@@ -61,13 +61,25 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Init & Dealloc
 
+- (id)init
+{
+	self = [super init];
+	if(self) {
+		BOOL setupWasOK = [self sharedSetup];
+		if(setupWasOK == NO) {
+			return nil;
+		}
+	}
+	return self;
+}
+
 - (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if(self) {
 		BOOL setupWasOK = [self sharedSetup];
 		if(setupWasOK == NO) {
-			self = nil;
+			return nil;
 		}
     }
     return self;
@@ -79,7 +91,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	if(self) {
 		BOOL setupWasOK = [self sharedSetup];
 		if(setupWasOK == NO) {
-			self = nil;
+			return nil;
 		}
 	}
 	return self;
@@ -93,10 +105,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	[self removeObserver:self forKeyPath:@"exposurePointOfInterestIndicator" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"paused" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"previewLayerGravity" context:kSRCameraViewObserverContext];
-	
-	_stillImageOutput = nil;
-	_videoOutput = nil;
-	
+		
 	if(_stillImagePrepareQueue) {
 		dispatch_release(_stillImagePrepareQueue);
 	}
