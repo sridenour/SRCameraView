@@ -59,6 +59,17 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	dispatch_queue_t _stillImagePrepareQueue;
 }
 
+#pragma mark - Class Methods
+
++ (BOOL)deviceHasCamera
+{
+	if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+		return YES;
+	} else {
+		return NO;
+	}
+}
+
 #pragma mark - Init & Dealloc
 
 - (id)init

@@ -50,7 +50,7 @@
     [super viewDidLoad];
 	
 	// Do we have a camera?
-	if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+	if([SRCameraView deviceHasCamera]) {
 		NSLog(@"Device has camera");
 		
 		_defaultToolbarItems = self.toolbar.items;

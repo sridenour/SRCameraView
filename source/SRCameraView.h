@@ -48,6 +48,9 @@
 // YES = live video preview will be paused, NO = live video preview will resume
 @property (nonatomic, readwrite, assign) BOOL paused;
 
+// Does this device have a camera?
++ (BOOL)deviceHasCamera;
+
 - (void)start;
 - (void)stop;
 
