@@ -92,9 +92,6 @@
 {
 	[super viewDidUnload];
 	
-	if(_cameraView.superview != nil) {
-		[_cameraView removeFromSuperview];
-	}
 	_cameraView = nil;
 }
 
