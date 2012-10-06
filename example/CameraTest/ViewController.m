@@ -151,6 +151,7 @@
 {
 	if(sender.state == UIGestureRecognizerStateEnded) {
 		[_cameraView setCurrentCameraFocusPoint:[sender locationInView:sender.view]];
+		[_cameraView setCurrentCameraExposurePoint:[sender locationInView:sender.view]];
 	}
 }
 

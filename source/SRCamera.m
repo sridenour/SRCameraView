@@ -133,68 +133,72 @@
 	}
 }
 
-- (void)setFocusPointOfInterest:(CGPoint)newFocusPoint withFocusMode:(AVCaptureFocusMode)focusMode
+- (BOOL)setFocusPointOfInterest:(CGPoint)newFocusPoint withFocusMode:(AVCaptureFocusMode)focusMode
 {
 	if(_focusPointOfInterestSupported == NO) {
 		[NSException raise:NSInternalInconsistencyException
 					format:@"%s: tried to set focus point-of-interest on a camera without focus point-of-interest support", __FUNCTION__];
 	}
 	
-	if(CGPointEqualToPoint(_focusPointOfInterest, newFocusPoint)) {
-		return;
-	}
-	
 	AVCaptureDevice *device = _deviceInput.device;
-	NSError *lockError = nil;
 	
-	[device lockForConfiguration:&lockError];
-	
-	if(lockError == nil) {
-		device.focusPointOfInterest = newFocusPoint;
-		if([device isFocusModeSupported:focusMode]) {
-			device.focusMode = focusMode;
-		}
-		_focusPointOfInterest = newFocusPoint;
+	if([device isFocusModeSupported:focusMode]) {
+		NSError *lockError = nil;
+		[device lockForConfiguration:&lockError];
 		
-		[device unlockForConfiguration];
+		if(lockError == nil) {
+			device.focusPointOfInterest = newFocusPoint;
+			device.focusMode = focusMode;
+			_focusPointOfInterest = newFocusPoint;
+			
+			[device unlockForConfiguration];
+			
+			return YES;
+		} else {
+			return NO;
+		}
+	} else {
+		return NO;
 	}
 }
 
-- (void)setExposurePointOfInterest:(CGPoint)newExposurePointOfInterest withExposureMode:(AVCaptureExposureMode)exposureMode
+- (BOOL)setExposurePointOfInterest:(CGPoint)newExposurePointOfInterest withExposureMode:(AVCaptureExposureMode)exposureMode
 {
 	if(_exposurePointOfInterestSupported == NO) {
 		[NSException raise:NSInternalInconsistencyException
 					format:@"%s: tried to set exposure point-of-interest on a camera without exposure point-of-interest support", __FUNCTION__];
 	}
 	
-	if(CGPointEqualToPoint(_exposurePointOfInterest, newExposurePointOfInterest)) {
-		return;
-	}
-	
 	AVCaptureDevice *device = _deviceInput.device;
-	NSError *lockError = nil;
 	
-	[device lockForConfiguration:&lockError];
-	
-	if(lockError == nil) {
-		device.exposurePointOfInterest = newExposurePointOfInterest;
-		if([device isExposureModeSupported:exposureMode]) {
+	if([device isExposureModeSupported:exposureMode]) {
+		NSError *lockError = nil;
+		[device lockForConfiguration:&lockError];
+		
+		if(lockError == nil) {
+			device.exposurePointOfInterest = newExposurePointOfInterest;
 			device.exposureMode = exposureMode;
-		}
-		_exposurePointOfInterest = newExposurePointOfInterest;
-		
-		AVCaptureWhiteBalanceMode whiteBalanceMode;
-		if(exposureMode == AVCaptureExposureModeContinuousAutoExposure) {
-			whiteBalanceMode = AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance;
+			_exposurePointOfInterest = newExposurePointOfInterest;
+			
+			AVCaptureWhiteBalanceMode whiteBalanceMode;
+			if(exposureMode == AVCaptureExposureModeContinuousAutoExposure) {
+				whiteBalanceMode = AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance;
+			} else {
+				whiteBalanceMode = AVCaptureWhiteBalanceModeAutoWhiteBalance;
+			}
+			
+			if([device isWhiteBalanceModeSupported:whiteBalanceMode]) {
+				device.whiteBalanceMode = whiteBalanceMode;
+			}
+			
+			[device unlockForConfiguration];
+			
+			return YES;
 		} else {
-			whiteBalanceMode = AVCaptureWhiteBalanceModeAutoWhiteBalance;
+			return NO;
 		}
-		
-		if([device isWhiteBalanceModeSupported:whiteBalanceMode]) {
-			device.whiteBalanceMode = whiteBalanceMode;
-		}
-		
-		[device unlockForConfiguration];
+	} else {
+		return NO;
 	}
 }
 

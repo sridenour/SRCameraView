@@ -48,7 +48,8 @@
 
 // Focus point and exposure point are in camera coordinates, i.e. (0, 0) is top left of unrotated picture,
 // and (1, 1) is bottom right.
-- (void)setFocusPointOfInterest:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
-- (void)setExposurePointOfInterest:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode;
+// Returns YES if set, NO if not.
+- (BOOL)setFocusPointOfInterest:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
+- (BOOL)setExposurePointOfInterest:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode;
 
 @end
