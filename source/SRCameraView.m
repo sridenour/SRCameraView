@@ -56,7 +56,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	__weak SRCamera *_currentCamera;
 	BOOL _shouldCapturePreviewImage;
 	
-	dispatch_queue_t _stillImagePrepareQueue;
+	dispatch_queue_t _videoPreviewQueue;
 	
 	// On iOS 6+ we can ask the preview layer to give us the camera coordinates of a tap.
 	BOOL _hasCaptureDevicePointOfInterestForPoint;
@@ -120,8 +120,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	[self removeObserver:self forKeyPath:@"paused" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"previewLayerGravity" context:kSRCameraViewObserverContext];
 		
-	if(_stillImagePrepareQueue) {
-		dispatch_release(_stillImagePrepareQueue);
+	if(_videoPreviewQueue) {
+		dispatch_release(_videoPreviewQueue);
 	}
 }
 
@@ -146,14 +146,14 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	[_captureSession addInput:_currentCamera.deviceInput];
 	
 	_stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-	_stillImageOutput.outputSettings = @{ AVVideoCodecKey : AVVideoCodecJPEG };
+	_stillImageOutput.outputSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
 	[_captureSession addOutput:_stillImageOutput];
 	
 	_videoOutput = [[AVCaptureVideoDataOutput alloc] init];
 	_videoOutput.videoSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
-	dispatch_queue_t videoPreviewQueue = dispatch_queue_create("SRCameraView.videoPreviewQueue", 0);
-	[_videoOutput setSampleBufferDelegate:self queue:videoPreviewQueue];
-	dispatch_release(videoPreviewQueue);
+	_videoOutput.alwaysDiscardsLateVideoFrames = YES;
+	_videoPreviewQueue = dispatch_queue_create("SRCameraView.videoPreviewQueue", 0);
+	[_videoOutput setSampleBufferDelegate:self queue:_videoPreviewQueue];
 	[_captureSession addOutput:_videoOutput];
 	
 	[self scanStillImageConnections];
@@ -163,6 +163,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	_previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
 	[self.layer insertSublayer:_previewLayer below:[[self.layer sublayers] objectAtIndex:0]];
 	_previewLayerGravity = AVLayerVideoGravityResizeAspectFill;
+	self.clipsToBounds = YES;
+	self.layer.masksToBounds = YES;
 	
 	if([_previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]) {
 		_hasCaptureDevicePointOfInterestForPoint = YES;
@@ -189,8 +191,6 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	_previewPausedView.hidden = YES;
 	[self addSubview:_previewPausedView];
 	_shouldCapturePreviewImage = NO;
-	
-	_stillImagePrepareQueue = dispatch_queue_create("SRCameraView.stillImagePreparationQueue", 0);
 	
 	[self addObserver:self forKeyPath:@"focusPointOfInterestIndicator" options:0 context:kSRCameraViewObserverContext];
 	[self addObserver:self forKeyPath:@"exposurePointOfInterestIndicator" options:0 context:kSRCameraViewObserverContext];
@@ -289,10 +289,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	 completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
 		 CFRetain(imageDataSampleBuffer);
 		 
-		 dispatch_async(_stillImagePrepareQueue, ^{
-			 NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-			 UIImage *photo = [UIImage imageWithData:imageData];
-			 imageData = nil;
+		 dispatch_async(_videoPreviewQueue, ^{
+			 UIImage *photo = [UIImage imageWithCMSampleBuffer:imageDataSampleBuffer];
 			 CFRelease(imageDataSampleBuffer);
 			 
 			 UIImage *previewImage = [UIImage image:photo scaledToSize:self.previewPausedView.frame.size scaleMode:kSRImageProcessScaleAspectFill];

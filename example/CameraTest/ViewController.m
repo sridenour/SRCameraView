@@ -87,7 +87,7 @@
 		UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
 		tapGesture.numberOfTapsRequired = 1;
 		tapGesture.numberOfTouchesRequired = 1;
-		[self.view addGestureRecognizer:tapGesture];
+		[_cameraView addGestureRecognizer:tapGesture];
 	} else {
 		NSLog(@"No camera");
 	}
