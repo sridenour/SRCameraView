@@ -195,6 +195,17 @@
 		}
 		_exposurePointOfInterest = newExposurePointOfInterest;
 		
+		AVCaptureWhiteBalanceMode whiteBalanceMode;
+		if(exposureMode == AVCaptureExposureModeContinuousAutoExposure) {
+			whiteBalanceMode = AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance;
+		} else {
+			whiteBalanceMode = AVCaptureWhiteBalanceModeAutoWhiteBalance;
+		}
+		
+		if([device isWhiteBalanceModeSupported:whiteBalanceMode]) {
+			device.whiteBalanceMode = whiteBalanceMode;
+		}
+		
 		if(_shouldLockForConfigurationChanges == YES) {
 			[device unlockForConfiguration];
 		}
