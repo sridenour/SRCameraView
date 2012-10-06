@@ -40,10 +40,6 @@
 @property (nonatomic, readonly) CGPoint focusPointOfInterest;
 @property (nonatomic, readonly) CGPoint exposurePointOfInterest;
 
-// Default is YES, set this to NO if you want to lock & unlock yourself (such as for doing focus & exposure
-// point-of-interest changes at the same time)
-@property (nonatomic, readwrite, assign) BOOL shouldLockForConfigurationChanges;
-
 + (SRCamera *)cameraWithCaptureDevice:(AVCaptureDevice *)captureDevice;
 + (SRCamera *)cameraWithPosition:(AVCaptureDevicePosition)position;
 

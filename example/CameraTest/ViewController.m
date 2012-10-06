@@ -150,7 +150,7 @@
 - (void)handleTapGesture:(UITapGestureRecognizer *)sender
 {
 	if(sender.state == UIGestureRecognizerStateEnded) {
-		[_cameraView setCurrentCameraFocusAndExposurePoint:[sender locationInView:sender.view] lockFocus:YES lockExposure:YES];
+		[_cameraView setCurrentCameraFocusPoint:[sender locationInView:sender.view]];
 	}
 }
 

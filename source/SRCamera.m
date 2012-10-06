@@ -87,8 +87,6 @@
 			} else {
 				_exposurePointOfInterest = CGPointZero;
 			}
-			
-			_shouldLockForConfigurationChanges = YES;
 		}
 	}
 	
@@ -124,16 +122,12 @@
 		
 		if([device isFlashModeSupported:newFlashMode]) {
 			NSError *lockError = nil;
-			if(_shouldLockForConfigurationChanges == YES) {
-				[device lockForConfiguration:&lockError];
-			}
+			[device lockForConfiguration:&lockError];
 			if(lockError == nil) {
 				device.flashMode = newFlashMode;
 				_flashMode = newFlashMode;
 				
-				if(_shouldLockForConfigurationChanges == YES) {
-					[device unlockForConfiguration];
-				}
+				[device unlockForConfiguration];
 			}
 		}
 	}
@@ -153,9 +147,7 @@
 	AVCaptureDevice *device = _deviceInput.device;
 	NSError *lockError = nil;
 	
-	if(_shouldLockForConfigurationChanges == YES) {
-		[device lockForConfiguration:&lockError];
-	}
+	[device lockForConfiguration:&lockError];
 	
 	if(lockError == nil) {
 		device.focusPointOfInterest = newFocusPoint;
@@ -164,9 +156,7 @@
 		}
 		_focusPointOfInterest = newFocusPoint;
 		
-		if(_shouldLockForConfigurationChanges == YES) {
-			[device unlockForConfiguration];
-		}
+		[device unlockForConfiguration];
 	}
 }
 
@@ -184,9 +174,7 @@
 	AVCaptureDevice *device = _deviceInput.device;
 	NSError *lockError = nil;
 	
-	if(_shouldLockForConfigurationChanges == YES) {
-		[device lockForConfiguration:&lockError];
-	}
+	[device lockForConfiguration:&lockError];
 	
 	if(lockError == nil) {
 		device.exposurePointOfInterest = newExposurePointOfInterest;
@@ -206,9 +194,7 @@
 			device.whiteBalanceMode = whiteBalanceMode;
 		}
 		
-		if(_shouldLockForConfigurationChanges == YES) {
-			[device unlockForConfiguration];
-		}
+		[device unlockForConfiguration];
 	}
 }
 

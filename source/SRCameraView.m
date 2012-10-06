@@ -525,38 +525,4 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	}
 }
 
-- (void)setCurrentCameraFocusAndExposurePoint:(CGPoint)point lockFocus:(BOOL)lockFocus lockExposure:(BOOL)lockExposure
-{
-	if(self.currentCamera.focusPointOfInterestSupported || self.currentCamera.exposurePointOfInterestSupported) {
-		BOOL oldShouldLock = self.currentCamera.shouldLockForConfigurationChanges;
-		self.currentCamera.shouldLockForConfigurationChanges = NO;
-		
-		AVCaptureFocusMode focusMode;
-		if(lockFocus == YES) {
-			focusMode = AVCaptureFocusModeAutoFocus;
-		} else {
-			focusMode = AVCaptureFocusModeContinuousAutoFocus;
-		}
-		
-		AVCaptureExposureMode exposureMode;
-		if(lockExposure == YES) {
-			exposureMode = AVCaptureExposureModeAutoExpose;
-		} else {
-			exposureMode = AVCaptureExposureModeContinuousAutoExposure;
-		}
-		
-		AVCaptureDevice *device = self.currentCamera.deviceInput.device;
-		NSError *lockError = nil;
-		[device lockForConfiguration:&lockError];
-		if(lockError == nil) {
-			[self setCurrentCameraFocusPoint:point withFocusMode:focusMode];
-			[self setCurrentCameraExposurePoint:point withFocusMode:exposureMode];
-			
-			[device unlockForConfiguration];
-		}
-		
-		self.currentCamera.shouldLockForConfigurationChanges = oldShouldLock;
-	}
-}
-
 @end
