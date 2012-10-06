@@ -58,8 +58,17 @@
 - (void)useRearCamera;
 - (void)swapCameras;
 
-- (void)setFocusPoint:(CGPoint)focusPoint;
-- (void)setExposurePoint:(CGPoint)exposurePoint;
+// Focus point and exposure point are in view coordinates, will be converted to camera coordinates
+- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint;
+- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint;
+
+- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
+- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode;
+
+// Will batch the focus and exposure point change into one configuration change.
+// lockFocus: YES = camera will autofocus on point and then lock, NO = camera will continuously autofocus on point
+// lockExposure: YES = camera will autoexpose on point and then lock, NO = camera will continuously autoexpose on point
+- (void)setCurrentCameraFocusAndExposurePoint:(CGPoint)point lockFocus:(BOOL)lockFocus lockExposure:(BOOL)lockExposure;
 
 // Completion block will always be executed on the main thread
 - (void)takePhotoWithCompletionBlock:(void (^)(UIImage *photo, UIImage *preview))takePhotoCompletionBlock;

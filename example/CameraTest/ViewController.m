@@ -83,6 +83,11 @@
 		// IMPORTANT: need this if you want camera view to be taller on iPhone 5 & normal size on iPhone 4/4S/etc.
 		_cameraView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
 		[self.view addSubview:_cameraView];
+		
+		UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
+		tapGesture.numberOfTapsRequired = 1;
+		tapGesture.numberOfTouchesRequired = 1;
+		[self.view addGestureRecognizer:tapGesture];
 	} else {
 		NSLog(@"No camera");
 	}
@@ -138,6 +143,15 @@
 	[self.toolbar setItems:_defaultToolbarItems animated:YES];
 	UIImageWriteToSavedPhotosAlbum(_photo, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
 	_cameraView.paused = NO;
+}
+
+#pragma mark - Gesture Recognizer Methods
+
+- (void)handleTapGesture:(UITapGestureRecognizer *)sender
+{
+	if(sender.state == UIGestureRecognizerStateEnded) {
+		[_cameraView setCurrentCameraFocusAndExposurePoint:[sender locationInView:sender.view] lockFocus:YES lockExposure:YES];
+	}
 }
 
 #pragma mark - Image Saving

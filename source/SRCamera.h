@@ -37,13 +37,22 @@
 @property (nonatomic, readonly) BOOL focusPointOfInterestSupported;
 @property (nonatomic, readonly) BOOL exposurePointOfInterestSupported;
 
-@property (nonatomic, readwrite, assign) CGPoint focusPointOfInterest;
-@property (nonatomic, readwrite, assign) CGPoint exposurePointOfInterest;
+@property (nonatomic, readonly) CGPoint focusPointOfInterest;
+@property (nonatomic, readonly) CGPoint exposurePointOfInterest;
+
+// Default is YES, set this to NO if you want to lock & unlock yourself (such as for doing focus & exposure
+// point-of-interest changes at the same time)
+@property (nonatomic, readwrite, assign) BOOL shouldLockForConfigurationChanges;
 
 + (SRCamera *)cameraWithCaptureDevice:(AVCaptureDevice *)captureDevice;
 + (SRCamera *)cameraWithPosition:(AVCaptureDevicePosition)position;
 
 - (id)initWithCaptureDevice:(AVCaptureDevice *)captureDevice;
 - (id)initWithCameraPosition:(AVCaptureDevicePosition)position;
+
+// Focus point and exposure point are in camera coordinates, i.e. (0, 0) is top left of unrotated picture,
+// and (1, 1) is bottom right.
+- (void)setFocusPointOfInterest:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
+- (void)setExposurePointOfInterest:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode;
 
 @end

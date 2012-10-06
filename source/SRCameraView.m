@@ -57,6 +57,9 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	BOOL _shouldCapturePreviewImage;
 	
 	dispatch_queue_t _stillImagePrepareQueue;
+	
+	// On iOS 6+ we can ask the preview layer to give us the camera coordinates of a tap.
+	BOOL _hasCaptureDevicePointOfInterestForPoint;
 }
 
 #pragma mark - Class Methods
@@ -158,8 +161,14 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	_previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession];
 	_previewLayer.frame = self.bounds;
 	_previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-	[self.layer addSublayer:_previewLayer];
+	[self.layer insertSublayer:_previewLayer below:[[self.layer sublayers] objectAtIndex:0]];
 	_previewLayerGravity = AVLayerVideoGravityResizeAspectFill;
+	
+	if([_previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]) {
+		_hasCaptureDevicePointOfInterestForPoint = YES;
+	} else {
+		_hasCaptureDevicePointOfInterestForPoint = NO;
+	}
 	
 	_focusPointOfInterestIndicator = [UIImage imageNamed:@"focusPoint.png"];
 	_focusPointIndicatorView = [[UIImageView alloc] initWithImage:_focusPointOfInterestIndicator];
@@ -297,6 +306,79 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	
 }
 
+// For converting from view coordinates to camera coordinates on iOS 5
+// From Apple's AVCam example
+- (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates
+{
+    CGPoint pointOfInterest = CGPointMake(.5f, .5f);
+    CGSize frameSize = self.frame.size;
+    
+    if ([self.previewLayer isMirrored]) {
+        viewCoordinates.x = frameSize.width - viewCoordinates.x;
+    }
+	
+    if ( [[self.previewLayer videoGravity] isEqualToString:AVLayerVideoGravityResize] ) {
+        // Scale, switch x and y, and reverse x
+        pointOfInterest = CGPointMake(viewCoordinates.y / frameSize.height, 1.f - (viewCoordinates.x / frameSize.width));
+    } else {
+        CGRect cleanAperture;
+        for (AVCaptureInputPort *port in self.currentCamera.deviceInput.ports) {
+            if ([port mediaType] == AVMediaTypeVideo) {
+                cleanAperture = CMVideoFormatDescriptionGetCleanAperture([port formatDescription], YES);
+                CGSize apertureSize = cleanAperture.size;
+                CGPoint point = viewCoordinates;
+				
+                CGFloat apertureRatio = apertureSize.height / apertureSize.width;
+                CGFloat viewRatio = frameSize.width / frameSize.height;
+                CGFloat xc = .5f;
+                CGFloat yc = .5f;
+                
+                if ( [[self.previewLayer videoGravity] isEqualToString:AVLayerVideoGravityResizeAspect] ) {
+                    if (viewRatio > apertureRatio) {
+                        CGFloat y2 = frameSize.height;
+                        CGFloat x2 = frameSize.height * apertureRatio;
+                        CGFloat x1 = frameSize.width;
+                        CGFloat blackBar = (x1 - x2) / 2;
+                        // If point is inside letterboxed area, do coordinate conversion; otherwise, don't change the default value returned (.5,.5)
+                        if (point.x >= blackBar && point.x <= blackBar + x2) {
+                            // Scale (accounting for the letterboxing on the left and right of the video preview), switch x and y, and reverse x
+                            xc = point.y / y2;
+                            yc = 1.f - ((point.x - blackBar) / x2);
+                        }
+                    } else {
+                        CGFloat y2 = frameSize.width / apertureRatio;
+                        CGFloat y1 = frameSize.height;
+                        CGFloat x2 = frameSize.width;
+                        CGFloat blackBar = (y1 - y2) / 2;
+                        // If point is inside letterboxed area, do coordinate conversion. Otherwise, don't change the default value returned (.5,.5)
+                        if (point.y >= blackBar && point.y <= blackBar + y2) {
+                            // Scale (accounting for the letterboxing on the top and bottom of the video preview), switch x and y, and reverse x
+                            xc = ((point.y - blackBar) / y2);
+                            yc = 1.f - (point.x / x2);
+                        }
+                    }
+                } else if ([[self.previewLayer videoGravity] isEqualToString:AVLayerVideoGravityResizeAspectFill]) {
+                    // Scale, switch x and y, and reverse x
+                    if (viewRatio > apertureRatio) {
+                        CGFloat y2 = apertureSize.width * (frameSize.width / apertureSize.height);
+                        xc = (point.y + ((y2 - frameSize.height) / 2.f)) / y2; // Account for cropped height
+                        yc = (frameSize.width - point.x) / frameSize.width;
+                    } else {
+                        CGFloat x2 = apertureSize.height * (frameSize.height / apertureSize.width);
+                        yc = 1.f - ((point.x + ((x2 - frameSize.width) / 2)) / x2); // Account for cropped width
+                        xc = point.y / frameSize.height;
+                    }
+                }
+                
+                pointOfInterest = CGPointMake(xc, yc);
+                break;
+            }
+        }
+    }
+    
+    return pointOfInterest;
+}
+
 #pragma mark - Key-Value Observing
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -379,14 +461,102 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Setters & Getters
 
-- (void)setFocusPoint:(CGPoint)focusPoint
+- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint
 {
-	// not implemented yet
+	[self setCurrentCameraFocusPoint:focusPoint withFocusMode:AVCaptureFocusModeAutoFocus];
 }
 
-- (void)setExposurePoint:(CGPoint)exposurePoint
+- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint
 {
-	// not implemented yet
+	[self setCurrentCameraExposurePoint:exposurePoint withFocusMode:AVCaptureExposureModeAutoExpose];
+}
+
+- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode
+{
+	if(self.currentCamera.focusPointOfInterestSupported) {
+		CGPoint cameraPoint = CGPointMake(0.5, 0.5);
+		if(_hasCaptureDevicePointOfInterestForPoint) {
+			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:focusPoint];
+		} else {
+			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:focusPoint];
+		}
+		
+		[self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode];
+		
+		if(self.shouldDrawPointsOfInterest) {
+			self.focusPointIndicatorView.center = focusPoint;
+			self.focusPointIndicatorView.alpha = 1.0;
+			self.focusPointIndicatorView.hidden = NO;
+			[UIView animateWithDuration:0.3 animations:^{
+				self.focusPointIndicatorView.alpha = 0.0;
+			} completion:^(BOOL finished) {
+				if(finished == YES) {
+					self.focusPointIndicatorView.hidden = YES;
+				}
+			}];
+		}
+	}
+}
+
+- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode
+{
+	if(self.currentCamera.exposurePointOfInterestSupported) {
+		CGPoint cameraPoint = CGPointMake(0.5, 0.5);
+		if(_hasCaptureDevicePointOfInterestForPoint) {
+			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:exposurePoint];
+		} else {
+			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:exposurePoint];
+		}
+		
+		[self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode];
+		
+		if(self.shouldDrawPointsOfInterest) {
+			self.exposurePointIndicatorView.center = exposurePoint;
+			self.exposurePointIndicatorView.alpha = 1.0;
+			self.exposurePointIndicatorView.hidden = NO;
+			[UIView animateWithDuration:0.3 animations:^{
+				self.exposurePointIndicatorView.alpha = 0.0;
+			} completion:^(BOOL finished) {
+				if(finished == YES) {
+					self.exposurePointIndicatorView.hidden = YES;
+				}
+			}];
+		}
+	}
+}
+
+- (void)setCurrentCameraFocusAndExposurePoint:(CGPoint)point lockFocus:(BOOL)lockFocus lockExposure:(BOOL)lockExposure
+{
+	if(self.currentCamera.focusPointOfInterestSupported || self.currentCamera.exposurePointOfInterestSupported) {
+		BOOL oldShouldLock = self.currentCamera.shouldLockForConfigurationChanges;
+		self.currentCamera.shouldLockForConfigurationChanges = NO;
+		
+		AVCaptureFocusMode focusMode;
+		if(lockFocus == YES) {
+			focusMode = AVCaptureFocusModeAutoFocus;
+		} else {
+			focusMode = AVCaptureFocusModeContinuousAutoFocus;
+		}
+		
+		AVCaptureExposureMode exposureMode;
+		if(lockExposure == YES) {
+			exposureMode = AVCaptureExposureModeAutoExpose;
+		} else {
+			exposureMode = AVCaptureExposureModeContinuousAutoExposure;
+		}
+		
+		AVCaptureDevice *device = self.currentCamera.deviceInput.device;
+		NSError *lockError = nil;
+		[device lockForConfiguration:&lockError];
+		if(lockError == nil) {
+			[self setCurrentCameraFocusPoint:point withFocusMode:focusMode];
+			[self setCurrentCameraExposurePoint:point withFocusMode:exposureMode];
+			
+			[device unlockForConfiguration];
+		}
+		
+		self.currentCamera.shouldLockForConfigurationChanges = oldShouldLock;
+	}
 }
 
 @end

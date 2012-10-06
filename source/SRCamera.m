@@ -87,6 +87,8 @@
 			} else {
 				_exposurePointOfInterest = CGPointZero;
 			}
+			
+			_shouldLockForConfigurationChanges = YES;
 		}
 	}
 	
@@ -122,17 +124,22 @@
 		
 		if([device isFlashModeSupported:newFlashMode]) {
 			NSError *lockError = nil;
-			[device lockForConfiguration:&lockError];
+			if(_shouldLockForConfigurationChanges == YES) {
+				[device lockForConfiguration:&lockError];
+			}
 			if(lockError == nil) {
 				device.flashMode = newFlashMode;
-				[device unlockForConfiguration];
 				_flashMode = newFlashMode;
+				
+				if(_shouldLockForConfigurationChanges == YES) {
+					[device unlockForConfiguration];
+				}
 			}
 		}
 	}
 }
 
-- (void)setFocusPointOfInterest:(CGPoint)newFocusPoint
+- (void)setFocusPointOfInterest:(CGPoint)newFocusPoint withFocusMode:(AVCaptureFocusMode)focusMode
 {
 	if(_focusPointOfInterestSupported == NO) {
 		[NSException raise:NSInternalInconsistencyException
@@ -146,18 +153,24 @@
 	AVCaptureDevice *device = _deviceInput.device;
 	NSError *lockError = nil;
 	
-	[device lockForConfiguration:&lockError];
+	if(_shouldLockForConfigurationChanges == YES) {
+		[device lockForConfiguration:&lockError];
+	}
+	
 	if(lockError == nil) {
 		device.focusPointOfInterest = newFocusPoint;
-		if([device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
-			device.focusMode = AVCaptureFocusModeAutoFocus;
+		if([device isFocusModeSupported:focusMode]) {
+			device.focusMode = focusMode;
 		}
 		_focusPointOfInterest = newFocusPoint;
-		[device unlockForConfiguration];
+		
+		if(_shouldLockForConfigurationChanges == YES) {
+			[device unlockForConfiguration];
+		}
 	}
 }
 
-- (void)setExposurePointOfInterest:(CGPoint)newExposurePointOfInterest
+- (void)setExposurePointOfInterest:(CGPoint)newExposurePointOfInterest withExposureMode:(AVCaptureExposureMode)exposureMode
 {
 	if(_exposurePointOfInterestSupported == NO) {
 		[NSException raise:NSInternalInconsistencyException
@@ -171,14 +184,20 @@
 	AVCaptureDevice *device = _deviceInput.device;
 	NSError *lockError = nil;
 	
-	[device lockForConfiguration:&lockError];
+	if(_shouldLockForConfigurationChanges == YES) {
+		[device lockForConfiguration:&lockError];
+	}
+	
 	if(lockError == nil) {
 		device.exposurePointOfInterest = newExposurePointOfInterest;
-		if([device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
-			device.exposureMode = AVCaptureExposureModeAutoExpose;
+		if([device isExposureModeSupported:exposureMode]) {
+			device.exposureMode = exposureMode;
 		}
 		_exposurePointOfInterest = newExposurePointOfInterest;
-		[device unlockForConfiguration];
+		
+		if(_shouldLockForConfigurationChanges == YES) {
+			[device unlockForConfiguration];
+		}
 	}
 }
 
