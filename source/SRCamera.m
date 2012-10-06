@@ -25,12 +25,6 @@
 #import "SRCamera.h"
 #import <AVFoundation/AVFoundation.h>
 
-#pragma mark - SRCamera Private Class Continuation
-
-@interface SRCamera ()
-
-@end
-
 #pragma mark - SRCamera
 
 @implementation SRCamera
