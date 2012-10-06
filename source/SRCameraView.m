@@ -481,19 +481,19 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:focusPoint];
 		}
 		
-		[self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode];
-		
-		if(self.shouldDrawPointsOfInterest) {
-			self.focusPointIndicatorView.center = focusPoint;
-			self.focusPointIndicatorView.alpha = 1.0;
-			self.focusPointIndicatorView.hidden = NO;
-			[UIView animateWithDuration:0.3 animations:^{
-				self.focusPointIndicatorView.alpha = 0.0;
-			} completion:^(BOOL finished) {
-				if(finished == YES) {
-					self.focusPointIndicatorView.hidden = YES;
-				}
-			}];
+		if([self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode] == YES) {
+			if(self.shouldDrawPointsOfInterest) {
+				self.focusPointIndicatorView.center = focusPoint;
+				self.focusPointIndicatorView.alpha = 1.0;
+				self.focusPointIndicatorView.hidden = NO;
+				[UIView animateWithDuration:0.3 animations:^{
+					self.focusPointIndicatorView.alpha = 0.0;
+				} completion:^(BOOL finished) {
+					if(finished == YES) {
+						self.focusPointIndicatorView.hidden = YES;
+					}
+				}];
+			}
 		}
 	}
 }
@@ -508,19 +508,19 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:exposurePoint];
 		}
 		
-		[self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode];
-		
-		if(self.shouldDrawPointsOfInterest) {
-			self.exposurePointIndicatorView.center = exposurePoint;
-			self.exposurePointIndicatorView.alpha = 1.0;
-			self.exposurePointIndicatorView.hidden = NO;
-			[UIView animateWithDuration:0.3 animations:^{
-				self.exposurePointIndicatorView.alpha = 0.0;
-			} completion:^(BOOL finished) {
-				if(finished == YES) {
-					self.exposurePointIndicatorView.hidden = YES;
-				}
-			}];
+		if([self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode]) {
+			if(self.shouldDrawPointsOfInterest) {
+				self.exposurePointIndicatorView.center = exposurePoint;
+				self.exposurePointIndicatorView.alpha = 1.0;
+				self.exposurePointIndicatorView.hidden = NO;
+				[UIView animateWithDuration:0.3 animations:^{
+					self.exposurePointIndicatorView.alpha = 0.0;
+				} completion:^(BOOL finished) {
+					if(finished == YES) {
+						self.exposurePointIndicatorView.hidden = YES;
+					}
+				}];
+			}
 		}
 	}
 }
