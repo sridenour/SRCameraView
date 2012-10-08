@@ -65,7 +65,7 @@
 - (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint;
 
 - (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
-- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode;
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode;
 
 // Completion block will always be executed on the main thread
 - (void)takePhotoWithCompletionBlock:(void (^)(UIImage *photo, UIImage *preview))takePhotoCompletionBlock;

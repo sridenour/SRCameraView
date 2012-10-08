@@ -470,7 +470,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 - (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint
 {
-	return [self setCurrentCameraExposurePoint:exposurePoint withFocusMode:AVCaptureExposureModeAutoExpose];
+	return [self setCurrentCameraExposurePoint:exposurePoint withExposureMode:AVCaptureExposureModeAutoExpose];
 }
 
 - (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode
@@ -506,7 +506,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	return success;
 }
 
-- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode
 {
 	BOOL success = NO;
 	
