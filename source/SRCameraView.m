@@ -143,6 +143,10 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		return NO;
 	}
 	
+	if(_currentCamera.hasFlash == YES) {
+		_currentCamera.flashMode = AVCaptureFlashModeOff;
+	}
+	
 	[_captureSession addInput:_currentCamera.deviceInput];
 	
 	_stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
