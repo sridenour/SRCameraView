@@ -463,18 +463,20 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Setters & Getters
 
-- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint
+- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint
 {
-	[self setCurrentCameraFocusPoint:focusPoint withFocusMode:AVCaptureFocusModeAutoFocus];
+	return [self setCurrentCameraFocusPoint:focusPoint withFocusMode:AVCaptureFocusModeAutoFocus];
 }
 
-- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint
 {
-	[self setCurrentCameraExposurePoint:exposurePoint withFocusMode:AVCaptureExposureModeAutoExpose];
+	return [self setCurrentCameraExposurePoint:exposurePoint withFocusMode:AVCaptureExposureModeAutoExpose];
 }
 
-- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode
+- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode
 {
+	BOOL success = NO;
+	
 	if(self.currentCamera.focusPointOfInterestSupported) {
 		CGPoint cameraPoint = CGPointMake(0.5, 0.5);
 		if(_hasCaptureDevicePointOfInterestForPoint) {
@@ -484,6 +486,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		}
 		
 		if([self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode] == YES) {
+			success = YES;
+			
 			if(self.shouldDrawPointsOfInterest) {
 				self.focusPointIndicatorView.center = focusPoint;
 				self.focusPointIndicatorView.alpha = 1.0;
@@ -498,10 +502,14 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 			}
 		}
 	}
+	
+	return success;
 }
 
-- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode
 {
+	BOOL success = NO;
+	
 	if(self.currentCamera.exposurePointOfInterestSupported) {
 		CGPoint cameraPoint = CGPointMake(0.5, 0.5);
 		if(_hasCaptureDevicePointOfInterestForPoint) {
@@ -511,6 +519,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		}
 		
 		if([self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode]) {
+			success = YES;
+			
 			if(self.shouldDrawPointsOfInterest) {
 				self.exposurePointIndicatorView.center = exposurePoint;
 				self.exposurePointIndicatorView.alpha = 1.0;
@@ -525,6 +535,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 			}
 		}
 	}
+	
+	return success;
 }
 
 @end

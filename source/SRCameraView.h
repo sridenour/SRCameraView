@@ -59,11 +59,13 @@
 - (void)swapCameras;
 
 // Focus point and exposure point are in view coordinates, will be converted to camera coordinates
-- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint;
-- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint;
+// Returns YES if focus/exposure point was successfully set, NO if couldn't be set or if relevant
+// point-of-interest not supported for current camera.
+- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint;
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint;
 
-- (void)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
-- (void)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode;
+- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withFocusMode:(AVCaptureExposureMode)exposureMode;
 
 // Completion block will always be executed on the main thread
 - (void)takePhotoWithCompletionBlock:(void (^)(UIImage *photo, UIImage *preview))takePhotoCompletionBlock;
