@@ -135,8 +135,10 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	
 	if(_rearCamera != nil) {
 		_currentCamera = _rearCamera;
+		_currentCameraPosition = AVCaptureDevicePositionBack;
 	} else if(_frontCamera != nil) {
 		_currentCamera = _frontCamera;
+		_currentCameraPosition = AVCaptureDevicePositionFront;
 	}
 	
 	if(_rearCamera == nil && _frontCamera ==  nil) {
@@ -253,6 +255,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	[self.captureSession addInput:camera.deviceInput];
 	
 	[self.captureSession commitConfiguration];
+	
+	_currentCamera = camera;
 }
 
 - (void)useFrontCamera
