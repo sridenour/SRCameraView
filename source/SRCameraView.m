@@ -218,6 +218,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 - (void)start
 {
 	[self.captureSession startRunning];
+	self.paused = NO;
 }
 
 - (void)stop
