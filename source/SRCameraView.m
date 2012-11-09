@@ -299,15 +299,17 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		 CFRetain(imageDataSampleBuffer);
 		 
 		 dispatch_async(_videoPreviewQueue, ^{
-			 UIImage *photo = [UIImage imageWithCMSampleBuffer:imageDataSampleBuffer];
-			 CFRelease(imageDataSampleBuffer);
-			 
-			 UIImage *previewImage = [UIImage image:photo scaledToSize:self.previewPausedView.frame.size scaleMode:kSRImageProcessScaleAspectFill];
-			 
-			 dispatch_async(dispatch_get_main_queue(), ^{
-				 self.previewPausedView.image = previewImage;
-				 completionBlock(photo, previewImage);
-			 });
+			 @autoreleasepool {
+				 UIImage *photo = [UIImage imageWithCMSampleBuffer:imageDataSampleBuffer];
+				 CFRelease(imageDataSampleBuffer);
+				 
+				 UIImage *previewImage = [UIImage image:photo scaledToSize:self.previewPausedView.frame.size scaleMode:kSRImageProcessScaleAspectFill];
+				 
+				 dispatch_async(dispatch_get_main_queue(), ^{
+					 self.previewPausedView.image = previewImage;
+					 completionBlock(photo, previewImage);
+				 });
+			 }
 		 });
 	}];
 	
