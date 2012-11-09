@@ -124,10 +124,11 @@
 
 - (IBAction)touchCameraButton:(id)sender
 {
+	__weak ViewController *weakSelf = self;
 	[_cameraView takePhotoWithCompletionBlock:^(UIImage *photo, UIImage *preview) {
 		// Do something with preview if you want to.
 		_photo = photo;
-		[self.toolbar setItems:_photoToolbarItems animated:YES];
+		[weakSelf.toolbar setItems:_photoToolbarItems animated:YES];
 	}];
 }
 
