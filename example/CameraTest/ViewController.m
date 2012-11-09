@@ -31,17 +31,18 @@
 @property (nonatomic, weak) IBOutlet UIToolbar *toolbar;
 @property (nonatomic, weak) IBOutlet UIBarButtonItem *cameraButton;
 
+@property (nonatomic, strong) NSArray *defaultToolbarItems;			// So we can put the default toolbar items back after a photo is taken
+@property (nonatomic, strong) NSArray *photoToolbarItems;			// After the user snaps a pic, we show these. So they can Retake or Use Photo.
+
+@property (nonatomic, strong) UIImage *photo;
+
+@property (nonatomic, strong) SRCameraView *cameraView;
+
 - (IBAction)touchCameraButton:(id)sender;
 
 @end
 
-@implementation ViewController {
-	SRCameraView *_cameraView;
-	NSArray *_defaultToolbarItems;			// So we can put the default toolbar items back after a photo is taken
-	NSArray *_photoToolbarItems;			// After the user snaps a pic, we show these. So they can Retake or Use Photo.
-	
-	UIImage *_photo;
-}
+@implementation ViewController
 
 #pragma mark - View Management
 
@@ -53,35 +54,35 @@
 	if([SRCameraView deviceHasCamera]) {
 		NSLog(@"Device has camera");
 		
-		_defaultToolbarItems = self.toolbar.items;
-		_photoToolbarItems = [NSArray arrayWithObjects:
-							  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
-																			target:nil
-																			action:nil],
-							  [[UIBarButtonItem alloc] initWithTitle:@"Retake"
-															   style:UIBarButtonItemStyleBordered
-															  target:self
-															  action:@selector(touchRetakeButton:)],
-							  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
-																			target:nil
-																			action:nil],
-							  [[UIBarButtonItem alloc] initWithTitle:@"Use Photo"
-															   style:UIBarButtonItemStyleBordered
-															  target:self
-															  action:@selector(touchUsePhotoButton:)],
-							  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
-																			target:nil
-																			action:nil],
-							  nil];
+		self.defaultToolbarItems = self.toolbar.items;
+		self.photoToolbarItems = [NSArray arrayWithObjects:
+								  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+																				target:nil
+																				action:nil],
+								  [[UIBarButtonItem alloc] initWithTitle:@"Retake"
+																   style:UIBarButtonItemStyleBordered
+																  target:self
+																  action:@selector(touchRetakeButton:)],
+								  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+																				target:nil
+																				action:nil],
+								  [[UIBarButtonItem alloc] initWithTitle:@"Use Photo"
+																   style:UIBarButtonItemStyleBordered
+																  target:self
+																  action:@selector(touchUsePhotoButton:)],
+								  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+																				target:nil
+																				action:nil],
+								  nil];
 		
 		CGRect cameraFrame = self.view.bounds;
 		cameraFrame.size.height = cameraFrame.size.height - self.toolbar.frame.size.height;
 		
-		_cameraView = [[SRCameraView alloc] initWithFrame:cameraFrame];
-		_cameraView.backgroundColor = [UIColor blackColor];
+		self.cameraView = [[SRCameraView alloc] initWithFrame:cameraFrame];
+		self.cameraView.backgroundColor = [UIColor blackColor];
 		
 		// IMPORTANT: need this if you want camera view to be taller on iPhone 5 & normal size on iPhone 4/4S/etc.
-		_cameraView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+		self.cameraView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
 		[self.view addSubview:_cameraView];
 		
 		UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
@@ -97,21 +98,21 @@
 {
 	[super viewDidUnload];
 	
-	_cameraView = nil;
+	self.cameraView = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
 	
-	[_cameraView start];
+	[self.cameraView start];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
 	[super viewWillDisappear:animated];
 	
-	[_cameraView stop];
+	[self.cameraView stop];
 }
 
 - (void)didReceiveMemoryWarning
@@ -125,26 +126,26 @@
 - (IBAction)touchCameraButton:(id)sender
 {
 	__weak ViewController *weakSelf = self;
-	[_cameraView takePhotoWithCompletionBlock:^(UIImage *photo, UIImage *preview) {
+	[self.cameraView takePhotoWithCompletionBlock:^(UIImage *photo, UIImage *preview) {
 		// Do something with preview if you want to.
-		_photo = photo;
-		[weakSelf.toolbar setItems:_photoToolbarItems animated:YES];
+		weakSelf.photo = photo;
+		[weakSelf.toolbar setItems:weakSelf.photoToolbarItems animated:YES];
 	}];
 }
 
 - (void)touchRetakeButton:(id)sender
 {
-	[self.toolbar setItems:_defaultToolbarItems animated:YES];
-	_photo = nil;
-	_cameraView.paused = NO;
+	[self.toolbar setItems:self.defaultToolbarItems animated:YES];
+	self.photo = nil;
+	self.cameraView.paused = NO;
 }
 
 - (void)touchUsePhotoButton:(id)sender
 {
-	[self.toolbar setItems:_defaultToolbarItems animated:YES];
-	UIImageWriteToSavedPhotosAlbum(_photo, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
-	_cameraView.paused = NO;
-	_photo = nil;
+	[self.toolbar setItems:self.defaultToolbarItems animated:YES];
+	UIImageWriteToSavedPhotosAlbum(self.photo, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
+	self.cameraView.paused = NO;
+	self.photo = nil;
 }
 
 #pragma mark - Gesture Recognizer Methods
@@ -152,8 +153,8 @@
 - (void)handleTapGesture:(UITapGestureRecognizer *)sender
 {
 	if(sender.state == UIGestureRecognizerStateEnded) {
-		[_cameraView setCurrentCameraFocusPoint:[sender locationInView:sender.view]];
-		[_cameraView setCurrentCameraExposurePoint:[sender locationInView:sender.view]];
+		[self.cameraView setCurrentCameraFocusPoint:[sender locationInView:sender.view]];
+		[self.cameraView setCurrentCameraExposurePoint:[sender locationInView:sender.view]];
 	}
 }
 
