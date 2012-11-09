@@ -143,6 +143,7 @@
 	[self.toolbar setItems:_defaultToolbarItems animated:YES];
 	UIImageWriteToSavedPhotosAlbum(_photo, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
 	_cameraView.paused = NO;
+	_photo = nil;
 }
 
 #pragma mark - Gesture Recognizer Methods
