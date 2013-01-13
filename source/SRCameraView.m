@@ -485,7 +485,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	BOOL success = NO;
 	
 	if(self.currentCamera.focusPointOfInterestSupported) {
-		CGPoint cameraPoint = CGPointMake(0.5, 0.5);
+		CGPoint cameraPoint;
 		if(_hasCaptureDevicePointOfInterestForPoint) {
 			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:focusPoint];
 		} else {
@@ -518,7 +518,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	BOOL success = NO;
 	
 	if(self.currentCamera.exposurePointOfInterestSupported) {
-		CGPoint cameraPoint = CGPointMake(0.5, 0.5);
+		CGPoint cameraPoint;
 		if(_hasCaptureDevicePointOfInterestForPoint) {
 			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:exposurePoint];
 		} else {
