@@ -105,15 +105,16 @@
 
 - (void)setFlashMode:(AVCaptureFlashMode)newFlashMode
 {
+	AVCaptureDevice *device = _deviceInput.device;
+	
 	if(_hasFlash == NO) {
-		[NSException raise:NSInternalInconsistencyException format:@"%s: tried to set flash mode on a camera with no flash", __FUNCTION__];
+		[NSException raise:NSInternalInconsistencyException format:@"%s: tried to set flash mode on a camera with no flash. AVCaptureDevice = %@",
+		 __FUNCTION__, device];
 	}
 	
 	if(_flashMode == newFlashMode) {
 		return;
 	} else {
-		AVCaptureDevice *device = _deviceInput.device;
-		
 		if([device isFlashModeSupported:newFlashMode]) {
 			NSError *lockError = nil;
 			[device lockForConfiguration:&lockError];
@@ -129,12 +130,13 @@
 
 - (BOOL)setFocusPointOfInterest:(CGPoint)newFocusPoint withFocusMode:(AVCaptureFocusMode)focusMode
 {
+	AVCaptureDevice *device = _deviceInput.device;
+	
 	if(_focusPointOfInterestSupported == NO) {
 		[NSException raise:NSInternalInconsistencyException
-					format:@"%s: tried to set focus point-of-interest on a camera without focus point-of-interest support", __FUNCTION__];
+					format:@"%s: tried to set focus point-of-interest on a camera without focus point-of-interest support. AVCaptureDevice = %@",
+					__FUNCTION__, device];
 	}
-	
-	AVCaptureDevice *device = _deviceInput.device;
 	
 	if([device isFocusModeSupported:focusMode]) {
 		NSError *lockError = nil;
@@ -158,12 +160,13 @@
 
 - (BOOL)setExposurePointOfInterest:(CGPoint)newExposurePointOfInterest withExposureMode:(AVCaptureExposureMode)exposureMode
 {
+	AVCaptureDevice *device = _deviceInput.device;
+	
 	if(_exposurePointOfInterestSupported == NO) {
 		[NSException raise:NSInternalInconsistencyException
-					format:@"%s: tried to set exposure point-of-interest on a camera without exposure point-of-interest support", __FUNCTION__];
+					format:@"%s: tried to set exposure point-of-interest on a camera without exposure point-of-interest support. AVCaptureDevice = %@",
+					__FUNCTION__, device];
 	}
-	
-	AVCaptureDevice *device = _deviceInput.device;
 	
 	if([device isExposureModeSupported:exposureMode]) {
 		NSError *lockError = nil;
