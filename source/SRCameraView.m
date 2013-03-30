@@ -1,7 +1,7 @@
 //
 //  SRCameraView.m
 /*
- Copyright (c) 2012 Sean Ridenour
+ Copyright (c) 2012, 2013 Sean Ridenour
  
  Permission is hereby granted, free of charge, to any person obtaining a copy of
  this software and associated documentation files (the "Software"), to deal in
@@ -119,10 +119,15 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	[self removeObserver:self forKeyPath:@"exposurePointOfInterestIndicator" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"paused" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"previewLayerGravity" context:kSRCameraViewObserverContext];
-		
+	
+	// Starting in iOS 6.0, GCD queues are managed by ARC
+#if __has_feature(objc_arc) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000
+	// Do nothing
+#else
 	if(_videoPreviewQueue) {
 		dispatch_release(_videoPreviewQueue);
 	}
+#endif
 }
 
 - (BOOL)sharedSetup
@@ -299,19 +304,17 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		 CFRetain(imageDataSampleBuffer);
 		 
 		 dispatch_async(_videoPreviewQueue, ^{
-			 @autoreleasepool {
-				 UIImage *photo = [UIImage imageWithCMSampleBuffer:imageDataSampleBuffer];
-				 CFRelease(imageDataSampleBuffer);
-				 
-				 UIImage *previewImage = [UIImage image:photo scaledToSize:self.previewPausedView.frame.size scaleMode:kSRImageProcessScaleAspectFill];
-				 
-				 dispatch_async(dispatch_get_main_queue(), ^{
-					 self.previewPausedView.image = previewImage;
-					 completionBlock(photo, previewImage);
-				 });
-			 }
+			 UIImage *photo = [UIImage imageWithCMSampleBuffer:imageDataSampleBuffer];
+			 CFRelease(imageDataSampleBuffer);
+			 
+			 UIImage *previewImage = [UIImage image:photo scaledToSize:self.previewPausedView.frame.size scaleMode:kSRImageProcessScaleAspectFill];
+			 
+			 dispatch_async(dispatch_get_main_queue(), ^{
+				 self.previewPausedView.image = previewImage;
+				 completionBlock(photo, previewImage);
+			 });
 		 });
-	}];
+	 }];
 	
 }
 
@@ -319,6 +322,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 // From Apple's AVCam example
 - (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates
 {
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < 60000
     CGPoint pointOfInterest = CGPointMake(.5f, .5f);
     CGSize frameSize = self.frame.size;
     
@@ -386,6 +390,9 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
     }
     
     return pointOfInterest;
+#else
+	return CGPointZero;		// Silence a compiler warning
+#endif // __IPHONE_OS_VERSION_MIN_REQUIRED < 60000
 }
 
 #pragma mark - Key-Value Observing
@@ -547,3 +554,4 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 }
 
 @end
+
