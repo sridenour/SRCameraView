@@ -2,7 +2,6 @@
 //  SRCameraView.m
 /*
  Copyright (c) 2012, 2013 Sean Ridenour
- Copyright (c) 2014, Sean Ridenour, Tancrède Chazallet
  
  Permission is hereby granted, free of charge, to any person obtaining a copy of
  this software and associated documentation files (the "Software"), to deal in
@@ -65,8 +64,9 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Class Methods
 
-+ (BOOL)deviceHasCamera {
-	if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
++ (BOOL)deviceHasCamera
+{
+	if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
 		return YES;
 	} else {
 		return NO;
@@ -75,88 +75,44 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Init & Dealloc
 
-- (id)init {
-	if (self = [super init]) {
-		_captureSession = [[AVCaptureSession alloc] init];
-		_captureSession.sessionPreset = AVCaptureSessionPresetPhoto;
-		
-		_rearCamera = [SRCamera cameraWithPosition:AVCaptureDevicePositionBack];
-		_frontCamera = [SRCamera cameraWithPosition:AVCaptureDevicePositionFront];
-		
-		if (_rearCamera != nil) {
-			_currentCamera = _rearCamera;
-			_currentCameraPosition = AVCaptureDevicePositionBack;
-		} else if (_frontCamera != nil) {
-			_currentCamera = _frontCamera;
-			_currentCameraPosition = AVCaptureDevicePositionFront;
+- (id)init
+{
+	self = [super init];
+	if(self) {
+		BOOL setupWasOK = [self sharedSetup];
+		if(setupWasOK == NO) {
+			return nil;
 		}
-		
-		if (_rearCamera == nil && _frontCamera ==  nil) {
-			return NO;
-		}
-		
-		if (_currentCamera.hasFlash == YES) {
-			_currentCamera.flashMode = AVCaptureFlashModeOff;
-		}
-		
-		[_captureSession addInput:_currentCamera.deviceInput];
-		
-		_stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-		_stillImageOutput.outputSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
-		[_captureSession addOutput:_stillImageOutput];
-		
-		_videoOutput = [[AVCaptureVideoDataOutput alloc] init];
-		_videoOutput.videoSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
-		_videoOutput.alwaysDiscardsLateVideoFrames = YES;
-		_videoPreviewQueue = dispatch_queue_create("SRCameraView.videoPreviewQueue", 0);
-		[_videoOutput setSampleBufferDelegate:self queue:_videoPreviewQueue];
-		[_captureSession addOutput:_videoOutput];
-		
-		[self scanStillImageConnections];
-		
-		_previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession];
-		_previewLayer.frame = self.bounds;
-		_previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-		[self.layer insertSublayer:_previewLayer below:[[self.layer sublayers] objectAtIndex:0]];
-		_previewLayerGravity = AVLayerVideoGravityResizeAspectFill;
-		self.clipsToBounds = YES;
-		self.layer.masksToBounds = YES;
-		
-		if ([_previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]) {
-			_hasCaptureDevicePointOfInterestForPoint = YES;
-		} else {
-			_hasCaptureDevicePointOfInterestForPoint = NO;
-		}
-		
-		_focusPointOfInterestIndicator = [UIImage imageNamed:@"focusPoint.png"];
-		_focusPointIndicatorView = [[UIImageView alloc] initWithImage:_focusPointOfInterestIndicator];
-		_focusPointIndicatorView.hidden = YES;
-		[self addSubview:_focusPointIndicatorView];
-		
-		_exposurePointOfInterestIndicator = [UIImage imageNamed:@"exposurePoint.png"];
-		_exposurePointIndicatorView = [[UIImageView alloc] initWithImage:_exposurePointOfInterestIndicator];
-		_exposurePointIndicatorView.hidden = YES;
-		[self addSubview:_exposurePointIndicatorView];
-		
-		_shouldDrawPointsOfInterest = YES;
-		
-		_previewPausedView = [[UIImageView alloc] initWithFrame:self.bounds];
-		_previewPausedView.contentMode = UIViewContentModeScaleAspectFill;
-		_previewPausedView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-		_previewPausedView.clipsToBounds = YES;
-		_previewPausedView.hidden = YES;
-		[self addSubview:_previewPausedView];
-		_shouldCapturePreviewImage = NO;
-		
-		[self addObserver:self forKeyPath:@"focusPointOfInterestIndicator" options:0 context:kSRCameraViewObserverContext];
-		[self addObserver:self forKeyPath:@"exposurePointOfInterestIndicator" options:0 context:kSRCameraViewObserverContext];
-		[self addObserver:self forKeyPath:@"paused" options:0 context:kSRCameraViewObserverContext];
-		[self addObserver:self forKeyPath:@"previewLayerGravity" options:0 context:kSRCameraViewObserverContext];
 	}
 	return self;
 }
 
-- (void)dealloc {
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if(self) {
+		BOOL setupWasOK = [self sharedSetup];
+		if(setupWasOK == NO) {
+			return nil;
+		}
+    }
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+	self = [super initWithCoder:aDecoder];
+	if(self) {
+		BOOL setupWasOK = [self sharedSetup];
+		if(setupWasOK == NO) {
+			return nil;
+		}
+	}
+	return self;
+}
+
+- (void)dealloc
+{
 	[_captureSession stopRunning];
 	
 	[self removeObserver:self forKeyPath:@"focusPointOfInterestIndicator" context:kSRCameraViewObserverContext];
@@ -168,37 +124,122 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 #if __has_feature(objc_arc) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000
 	// Do nothing
 #else
-	if (_videoPreviewQueue) {
+	if(_videoPreviewQueue) {
 		dispatch_release(_videoPreviewQueue);
 	}
 #endif
 }
 
+- (BOOL)sharedSetup
+{
+	_captureSession = [[AVCaptureSession alloc] init];
+	_captureSession.sessionPreset = AVCaptureSessionPresetPhoto;
+	
+	_rearCamera = [SRCamera cameraWithPosition:AVCaptureDevicePositionBack];
+	_frontCamera = [SRCamera cameraWithPosition:AVCaptureDevicePositionFront];
+	
+	if(_rearCamera != nil) {
+		_currentCamera = _rearCamera;
+		_currentCameraPosition = AVCaptureDevicePositionBack;
+	} else if(_frontCamera != nil) {
+		_currentCamera = _frontCamera;
+		_currentCameraPosition = AVCaptureDevicePositionFront;
+	}
+	
+	if(_rearCamera == nil && _frontCamera ==  nil) {
+		return NO;
+	}
+	
+	if(_currentCamera.hasFlash == YES) {
+		_currentCamera.flashMode = AVCaptureFlashModeOff;
+	}
+	
+	[_captureSession addInput:_currentCamera.deviceInput];
+	
+	_stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+	_stillImageOutput.outputSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
+	[_captureSession addOutput:_stillImageOutput];
+	
+	_videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+	_videoOutput.videoSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
+	_videoOutput.alwaysDiscardsLateVideoFrames = YES;
+	_videoPreviewQueue = dispatch_queue_create("SRCameraView.videoPreviewQueue", 0);
+	[_videoOutput setSampleBufferDelegate:self queue:_videoPreviewQueue];
+	[_captureSession addOutput:_videoOutput];
+	
+	[self scanStillImageConnections];
+	
+	_previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession];
+	_previewLayer.frame = self.bounds;
+	_previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+	[self.layer insertSublayer:_previewLayer below:[[self.layer sublayers] objectAtIndex:0]];
+	_previewLayerGravity = AVLayerVideoGravityResizeAspectFill;
+	self.clipsToBounds = YES;
+	self.layer.masksToBounds = YES;
+	
+	if([_previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]) {
+		_hasCaptureDevicePointOfInterestForPoint = YES;
+	} else {
+		_hasCaptureDevicePointOfInterestForPoint = NO;
+	}
+	
+	_focusPointOfInterestIndicator = [UIImage imageNamed:@"focusPoint.png"];
+	_focusPointIndicatorView = [[UIImageView alloc] initWithImage:_focusPointOfInterestIndicator];
+	_focusPointIndicatorView.hidden = YES;
+	[self addSubview:_focusPointIndicatorView];
+	
+	_exposurePointOfInterestIndicator = [UIImage imageNamed:@"exposurePoint.png"];
+	_exposurePointIndicatorView = [[UIImageView alloc] initWithImage:_exposurePointOfInterestIndicator];
+	_exposurePointIndicatorView.hidden = YES;
+	[self addSubview:_exposurePointIndicatorView];
+	
+	_shouldDrawPointsOfInterest = YES;
+	
+	_previewPausedView = [[UIImageView alloc] initWithFrame:self.bounds];
+	_previewPausedView.contentMode = UIViewContentModeScaleAspectFill;
+	_previewPausedView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+	_previewPausedView.clipsToBounds = YES;
+	_previewPausedView.hidden = YES;
+	[self addSubview:_previewPausedView];
+	_shouldCapturePreviewImage = NO;
+	
+	[self addObserver:self forKeyPath:@"focusPointOfInterestIndicator" options:0 context:kSRCameraViewObserverContext];
+	[self addObserver:self forKeyPath:@"exposurePointOfInterestIndicator" options:0 context:kSRCameraViewObserverContext];
+	[self addObserver:self forKeyPath:@"paused" options:0 context:kSRCameraViewObserverContext];
+	[self addObserver:self forKeyPath:@"previewLayerGravity" options:0 context:kSRCameraViewObserverContext];
+	
+	return YES;
+}
+
 #pragma mark - Layout Management
 
-- (void)layoutSubviews {
+- (void)layoutSubviews
+{
 	_previewLayer.frame = self.layer.bounds;
 }
 
 #pragma mark - Start & Stop
 
-- (void)start {
+- (void)start
+{
 	[self.captureSession startRunning];
 	self.paused = NO;
 }
 
-- (void)stop {
+- (void)stop
+{
 	[self.captureSession stopRunning];
 }
 
 #pragma mark - Camera Handling
 
-- (void)scanStillImageConnections {
+- (void)scanStillImageConnections
+{
 	AVCaptureConnection *videoConnection = nil;
 	
 	for(AVCaptureConnection *connection in self.stillImageOutput.connections) {
 		for(AVCaptureInputPort *port in connection.inputPorts) {
-			if ([port.mediaType isEqual:AVMediaTypeVideo]) {
+			if([port.mediaType isEqual:AVMediaTypeVideo]) {
 				videoConnection = connection;
 				break;
 			}
@@ -208,7 +249,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	self.captureConnection = videoConnection;
 }
 
-- (void)useCamera:(SRCamera *)camera {
+- (void)useCamera:(SRCamera *)camera
+{
 	[self.captureSession beginConfiguration];
 	
 	NSArray *inputs = self.captureSession.inputs;
@@ -223,31 +265,35 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	_currentCamera = camera;
 }
 
-- (void)useFrontCamera {
-	if (self.frontCamera != nil) {
+- (void)useFrontCamera
+{
+	if(self.frontCamera != nil) {
 		[self useCamera:self.frontCamera];
 		_currentCameraPosition = AVCaptureDevicePositionFront;
 		[self scanStillImageConnections];
 	}
 }
 
-- (void)useRearCamera {
-	if (self.rearCamera != nil) {
+- (void)useRearCamera
+{
+	if(self.rearCamera != nil) {
 		[self useCamera:self.rearCamera];
 		_currentCameraPosition = AVCaptureDevicePositionBack;
 		[self scanStillImageConnections];
 	}
 }
 
-- (void)swapCameras {
-	if (_currentCameraPosition == AVCaptureDevicePositionBack) {
+- (void)swapCameras
+{
+	if(_currentCameraPosition == AVCaptureDevicePositionBack) {
 		[self useFrontCamera];
 	} else {
 		[self useRearCamera];
 	}
 }
 
-- (void)takePhotoWithCompletionBlock:(void (^)(UIImage *, UIImage *))takePhotoCompletionBlock {
+- (void)takePhotoWithCompletionBlock:(void (^)(UIImage *, UIImage *))takePhotoCompletionBlock
+{
 	UIImage *(^completionBlock)(UIImage *photo, UIImage *preview) = [takePhotoCompletionBlock copy];
 	
 	self.paused = YES;
@@ -274,7 +320,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 // For converting from view coordinates to camera coordinates on iOS 5
 // From Apple's AVCam example
-- (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates {
+- (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates
+{
 #if __IPHONE_OS_VERSION_MIN_REQUIRED < 60000
     CGPoint pointOfInterest = CGPointMake(.5f, .5f);
     CGSize frameSize = self.frame.size;
@@ -350,10 +397,11 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Key-Value Observing
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if (context == kSRCameraViewObserverContext) {
-		if ([keyPath isEqualToString:@"paused"]) {
-			if (_paused == NO) {
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+	if(context == kSRCameraViewObserverContext) {
+		if([keyPath isEqualToString:@"paused"]) {
+			if(_paused == NO) {
 				_shouldCapturePreviewImage = NO;
 				dispatch_async(dispatch_get_main_queue(), ^{
 					self.previewPausedView.hidden = YES;
@@ -361,10 +409,10 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 			} else {
 				_shouldCapturePreviewImage = YES;
 			}
-		} else if ([keyPath isEqualToString:@"focusPointOfInterestIndicator"]) {
-			if (self.focusPointOfInterestIndicator != nil) {
+		} else if([keyPath isEqualToString:@"focusPointOfInterestIndicator"]) {
+			if(self.focusPointOfInterestIndicator != nil) {
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if (self.focusPointIndicatorView != nil) {
+					if(self.focusPointIndicatorView != nil) {
 						[self.focusPointIndicatorView removeFromSuperview];
 						self.focusPointIndicatorView = nil;
 					}
@@ -376,10 +424,10 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 					self.focusPointIndicatorView = fpv;
 				});
 			}
-		} else if ([keyPath isEqualToString:@"exposurePointOfInterestIndicator"]) {
-			if (self.exposurePointOfInterestIndicator != nil) {
+		} else if([keyPath isEqualToString:@"exposurePointOfInterestIndicator"]) {
+			if(self.exposurePointOfInterestIndicator != nil) {
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if (self.exposurePointIndicatorView != nil) {
+					if(self.exposurePointIndicatorView != nil) {
 						[self.exposurePointIndicatorView removeFromSuperview];
 						self.exposurePointIndicatorView = nil;
 					}
@@ -391,13 +439,13 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 					self.exposurePointIndicatorView = epv;
 				});
 			}
-		} else if ([keyPath isEqualToString:@"previewLayerGravity"]) {
+		} else if([keyPath isEqualToString:@"previewLayerGravity"]) {
 			self.previewLayer.videoGravity = self.previewLayerGravity;
-			if ([self.previewLayerGravity isEqualToString:AVLayerVideoGravityResize]) {
+			if([self.previewLayerGravity isEqualToString:AVLayerVideoGravityResize]) {
 				self.previewPausedView.contentMode = UIViewContentModeScaleToFill;
-			} else if ([self.previewLayerGravity isEqualToString:AVLayerVideoGravityResizeAspect]) {
+			} else if([self.previewLayerGravity isEqualToString:AVLayerVideoGravityResizeAspect]) {
 				self.previewPausedView.contentMode = UIViewContentModeScaleAspectFit;
-			} else if ([self.previewLayerGravity isEqualToString:AVLayerVideoGravityResizeAspectFill]) {
+			} else if([self.previewLayerGravity isEqualToString:AVLayerVideoGravityResizeAspectFill]) {
 				self.previewPausedView.contentMode = UIViewContentModeScaleAspectFill;
 			} else {
 				[NSException raise:NSInvalidArgumentException format:@"invalid preview layer gravity: %@", self.previewLayerGravity];
@@ -413,8 +461,9 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 #pragma mark - AVCaptureVideoDataOutputSampleBufferDelegate Methods
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-	   fromConnection:(AVCaptureConnection *)connection {
-	if (_shouldCapturePreviewImage == YES) {
+	   fromConnection:(AVCaptureConnection *)connection
+{
+	if(_shouldCapturePreviewImage == YES) {
 		_shouldCapturePreviewImage = NO;
 		
 		UIImage *previewImage = [UIImage imageWithCMSampleBuffer:sampleBuffer];
@@ -428,36 +477,39 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Setters & Getters
 
-- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint {
+- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint
+{
 	return [self setCurrentCameraFocusPoint:focusPoint withFocusMode:AVCaptureFocusModeAutoFocus];
 }
 
-- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint {
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint
+{
 	return [self setCurrentCameraExposurePoint:exposurePoint withExposureMode:AVCaptureExposureModeContinuousAutoExposure];
 }
 
-- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode {
+- (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode
+{
 	BOOL success = NO;
 	
-	if (self.currentCamera.focusPointOfInterestSupported) {
+	if(self.currentCamera.focusPointOfInterestSupported) {
 		CGPoint cameraPoint;
-		if (_hasCaptureDevicePointOfInterestForPoint) {
+		if(_hasCaptureDevicePointOfInterestForPoint) {
 			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:focusPoint];
 		} else {
 			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:focusPoint];
 		}
 		
-		if ([self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode] == YES) {
+		if([self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode] == YES) {
 			success = YES;
 			
-			if (self.shouldDrawPointsOfInterest) {
+			if(self.shouldDrawPointsOfInterest) {
 				self.focusPointIndicatorView.center = focusPoint;
 				self.focusPointIndicatorView.alpha = 1.0;
 				self.focusPointIndicatorView.hidden = NO;
 				[UIView animateWithDuration:0.3 animations:^{
 					self.focusPointIndicatorView.alpha = 0.0;
 				} completion:^(BOOL finished) {
-					if (finished == YES) {
+					if(finished == YES) {
 						self.focusPointIndicatorView.hidden = YES;
 					}
 				}];
@@ -468,28 +520,29 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	return success;
 }
 
-- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode {
+- (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode
+{
 	BOOL success = NO;
 	
-	if (self.currentCamera.exposurePointOfInterestSupported) {
+	if(self.currentCamera.exposurePointOfInterestSupported) {
 		CGPoint cameraPoint;
-		if (_hasCaptureDevicePointOfInterestForPoint) {
+		if(_hasCaptureDevicePointOfInterestForPoint) {
 			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:exposurePoint];
 		} else {
 			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:exposurePoint];
 		}
 		
-		if ([self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode]) {
+		if([self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode]) {
 			success = YES;
 			
-			if (self.shouldDrawPointsOfInterest) {
+			if(self.shouldDrawPointsOfInterest) {
 				self.exposurePointIndicatorView.center = exposurePoint;
 				self.exposurePointIndicatorView.alpha = 1.0;
 				self.exposurePointIndicatorView.hidden = NO;
 				[UIView animateWithDuration:0.3 animations:^{
 					self.exposurePointIndicatorView.alpha = 0.0;
 				} completion:^(BOOL finished) {
-					if (finished == YES) {
+					if(finished == YES) {
 						self.exposurePointIndicatorView.hidden = YES;
 					}
 				}];
@@ -498,27 +551,6 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	}
 	
 	return success;
-}
-
-- (void)setFlashMode:(AVCaptureFlashMode)flashMode {
-	AVCaptureDevice *cameraDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-	
-	NSError* err = nil;
-	
-	if (![cameraDevice lockForConfiguration:&err]) {
-		NSLog(@"SRCameraView couldn't get exclusive access to camera when setting flash");
-	} else {
-		// flip on the flash mode
-		if ([cameraDevice hasFlash] && [cameraDevice isFlashModeSupported:flashMode]) {
-			[cameraDevice setFlashMode:flashMode];
-		}
-		
-		[cameraDevice unlockForConfiguration];
-	}
-}
-
-- (AVCaptureFlashMode)flashMode {
-	return [[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo] flashMode];
 }
 
 @end
