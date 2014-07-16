@@ -37,6 +37,7 @@
 @property (nonatomic, readonly) SRCamera *rearCamera;
 @property (nonatomic, readonly) SRCamera *currentCamera;
 @property (nonatomic, readonly) AVCaptureDevicePosition currentCameraPosition;
+@property (nonatomic, assign) AVCaptureFlashMode flashMode;
 
 // setting either point-of-interest's indicator image will automatically change this to YES
 @property (nonatomic, readwrite, assign) BOOL shouldDrawPointsOfInterest;
