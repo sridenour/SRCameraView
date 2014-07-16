@@ -500,5 +500,26 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	return success;
 }
 
+- (void)setFlashMode:(AVCaptureFlashMode)flashMode {
+	AVCaptureDevice *cameraDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+	
+	NSError* err = nil;
+	
+	if (![cameraDevice lockForConfiguration:&err]) {
+		NSLog(@"SRCameraView couldn't get exclusive access to camera when setting flash");
+	} else {
+		// flip on the flash mode
+		if ([cameraDevice hasFlash] && [cameraDevice isFlashModeSupported:flashMode]) {
+			[cameraDevice setFlashMode:flashMode];
+		}
+		
+		[cameraDevice unlockForConfiguration];
+	}
+}
+
+- (AVCaptureFlashMode)flashMode {
+	return [[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo] flashMode];
+}
+
 @end
 
