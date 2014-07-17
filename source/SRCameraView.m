@@ -144,7 +144,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	_previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession];
 	_previewLayer.frame = self.bounds;
 	_previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-	[self.layer insertSublayer:_previewLayer below:[[self.layer sublayers] objectAtIndex:0]];
+	[self.layer insertSublayer:_previewLayer below:[self.layer sublayers][0]];
 	_previewLayerGravity = AVLayerVideoGravityResizeAspectFill;
 	self.clipsToBounds = YES;
 	self.layer.masksToBounds = YES;
