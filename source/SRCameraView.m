@@ -72,24 +72,10 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 #pragma mark - Init & Dealloc
 
-- (id)init
-{
-	self = [super init];
-	if(self) {
-		BOOL setupWasOK = [self sharedSetup];
-		if(setupWasOK == NO) {
-			return nil;
-		}
-	}
-	return self;
-}
-
 - (id)initWithFrame:(CGRect)frame
 {
-    self = [super initWithFrame:frame];
-    if(self) {
-		BOOL setupWasOK = [self sharedSetup];
-		if(setupWasOK == NO) {
+    if(self = [super initWithFrame:frame]) {
+		if(![self sharedSetup]) {
 			return nil;
 		}
     }
@@ -98,10 +84,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
-	self = [super initWithCoder:aDecoder];
-	if(self) {
-		BOOL setupWasOK = [self sharedSetup];
-		if(setupWasOK == NO) {
+	if(self = [super initWithCoder:aDecoder]) {
+		if([self sharedSetup]) {
 			return nil;
 		}
 	}
