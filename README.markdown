@@ -1,7 +1,7 @@
 SRCameraView
 ============
 
-Written for the iOS 6.0 SDK, but can be deployed as far back as iOS 5.0. Requires ARC.
+Written for the iOS 7.1 SDK, but *should* be able to be deployed as far back as iOS 6.0 (this is untested, however). There is **no** support for iOS 5.
 
 How To Install
 --------------
@@ -19,7 +19,7 @@ How to Use
 
 1. Import SRCameraView.h in the source for whatever view controller will be managing the camera view.
 2. Detect for the presence of a camera (if you haven't already).
-3. Create an instance of SRCameraView.
+3. Create an instance of SRCameraView using `-initWithFrame:`
 4. Set the resizing mask and whatever other properties you want (background color, etc.).
 5. Add your SRCameraView instance to your view controller's view.
 6. Call `-start` to begin the live preview.
