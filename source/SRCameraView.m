@@ -57,9 +57,6 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	BOOL _shouldCapturePreviewImage;
 	
 	dispatch_queue_t _videoPreviewQueue;
-	
-	// On iOS 6+ we can ask the preview layer to give us the camera coordinates of a tap.
-	BOOL _hasCaptureDevicePointOfInterestForPoint;
 }
 
 #pragma mark - Class Methods
@@ -168,10 +165,10 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	self.clipsToBounds = YES;
 	self.layer.masksToBounds = YES;
 	
-	if([_previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]) {
-		_hasCaptureDevicePointOfInterestForPoint = YES;
-	} else {
-		_hasCaptureDevicePointOfInterestForPoint = NO;
+	if(![_previewLayer respondsToSelector:@selector(captureDevicePointOfInterestForPoint:)]) {
+		[NSException raise:NSInternalInconsistencyException format:@"%s: _previewLayer does not support -captureDevicePointOfInterestForPoint:",
+		  __FUNCTION__];
+
 	}
 	
 	_focusPointOfInterestIndicator = [UIImage imageNamed:@"focusPoint.png"];
@@ -406,13 +403,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	BOOL success = NO;
 	
 	if(self.currentCamera.focusPointOfInterestSupported) {
-		CGPoint cameraPoint;
-		if(_hasCaptureDevicePointOfInterestForPoint) {
-			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:focusPoint];
-		} else {
-			[NSException raise:NSInternalInconsistencyException format:@"%s: _previewLayer does not support -captureDevicePointOfInterestForPoint:",
-			 __FUNCTION__];
-		}
+		CGPoint cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:focusPoint];
 		
 		if([self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode] == YES) {
 			success = YES;
@@ -440,13 +431,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	BOOL success = NO;
 	
 	if(self.currentCamera.exposurePointOfInterestSupported) {
-		CGPoint cameraPoint;
-		if(_hasCaptureDevicePointOfInterestForPoint) {
-			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:exposurePoint];
-		} else {
-			[NSException raise:NSInternalInconsistencyException format:@"%s: _previewLayer does not support -captureDevicePointOfInterestForPoint:",
-			 __FUNCTION__];
-		}
+		CGPoint cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:exposurePoint];
 		
 		if([self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode]) {
 			success = YES;
