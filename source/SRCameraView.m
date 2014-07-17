@@ -119,15 +119,6 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	[self removeObserver:self forKeyPath:@"exposurePointOfInterestIndicator" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"paused" context:kSRCameraViewObserverContext];
 	[self removeObserver:self forKeyPath:@"previewLayerGravity" context:kSRCameraViewObserverContext];
-	
-	// Starting in iOS 6.0, GCD queues are managed by ARC
-#if __has_feature(objc_arc) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000
-	// Do nothing
-#else
-	if(_videoPreviewQueue) {
-		dispatch_release(_videoPreviewQueue);
-	}
-#endif
 }
 
 - (BOOL)sharedSetup
@@ -318,83 +309,6 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	
 }
 
-// For converting from view coordinates to camera coordinates on iOS 5
-// From Apple's AVCam example
-- (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates
-{
-#if __IPHONE_OS_VERSION_MIN_REQUIRED < 60000
-    CGPoint pointOfInterest = CGPointMake(.5f, .5f);
-    CGSize frameSize = self.frame.size;
-    
-    if ([self.previewLayer isMirrored]) {
-        viewCoordinates.x = frameSize.width - viewCoordinates.x;
-    }
-	
-    if ( [[self.previewLayer videoGravity] isEqualToString:AVLayerVideoGravityResize] ) {
-        // Scale, switch x and y, and reverse x
-        pointOfInterest = CGPointMake(viewCoordinates.y / frameSize.height, 1.f - (viewCoordinates.x / frameSize.width));
-    } else {
-        CGRect cleanAperture;
-        for (AVCaptureInputPort *port in self.currentCamera.deviceInput.ports) {
-            if ([port mediaType] == AVMediaTypeVideo) {
-                cleanAperture = CMVideoFormatDescriptionGetCleanAperture([port formatDescription], YES);
-                CGSize apertureSize = cleanAperture.size;
-                CGPoint point = viewCoordinates;
-				
-                CGFloat apertureRatio = apertureSize.height / apertureSize.width;
-                CGFloat viewRatio = frameSize.width / frameSize.height;
-                CGFloat xc = .5f;
-                CGFloat yc = .5f;
-                
-                if ( [[self.previewLayer videoGravity] isEqualToString:AVLayerVideoGravityResizeAspect] ) {
-                    if (viewRatio > apertureRatio) {
-                        CGFloat y2 = frameSize.height;
-                        CGFloat x2 = frameSize.height * apertureRatio;
-                        CGFloat x1 = frameSize.width;
-                        CGFloat blackBar = (x1 - x2) / 2;
-                        // If point is inside letterboxed area, do coordinate conversion; otherwise, don't change the default value returned (.5,.5)
-                        if (point.x >= blackBar && point.x <= blackBar + x2) {
-                            // Scale (accounting for the letterboxing on the left and right of the video preview), switch x and y, and reverse x
-                            xc = point.y / y2;
-                            yc = 1.f - ((point.x - blackBar) / x2);
-                        }
-                    } else {
-                        CGFloat y2 = frameSize.width / apertureRatio;
-                        CGFloat y1 = frameSize.height;
-                        CGFloat x2 = frameSize.width;
-                        CGFloat blackBar = (y1 - y2) / 2;
-                        // If point is inside letterboxed area, do coordinate conversion. Otherwise, don't change the default value returned (.5,.5)
-                        if (point.y >= blackBar && point.y <= blackBar + y2) {
-                            // Scale (accounting for the letterboxing on the top and bottom of the video preview), switch x and y, and reverse x
-                            xc = ((point.y - blackBar) / y2);
-                            yc = 1.f - (point.x / x2);
-                        }
-                    }
-                } else if ([[self.previewLayer videoGravity] isEqualToString:AVLayerVideoGravityResizeAspectFill]) {
-                    // Scale, switch x and y, and reverse x
-                    if (viewRatio > apertureRatio) {
-                        CGFloat y2 = apertureSize.width * (frameSize.width / apertureSize.height);
-                        xc = (point.y + ((y2 - frameSize.height) / 2.f)) / y2; // Account for cropped height
-                        yc = (frameSize.width - point.x) / frameSize.width;
-                    } else {
-                        CGFloat x2 = apertureSize.height * (frameSize.height / apertureSize.width);
-                        yc = 1.f - ((point.x + ((x2 - frameSize.width) / 2)) / x2); // Account for cropped width
-                        xc = point.y / frameSize.height;
-                    }
-                }
-                
-                pointOfInterest = CGPointMake(xc, yc);
-                break;
-            }
-        }
-    }
-    
-    return pointOfInterest;
-#else
-	return CGPointZero;		// Silence a compiler warning
-#endif // __IPHONE_OS_VERSION_MIN_REQUIRED < 60000
-}
-
 #pragma mark - Key-Value Observing
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -496,7 +410,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		if(_hasCaptureDevicePointOfInterestForPoint) {
 			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:focusPoint];
 		} else {
-			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:focusPoint];
+			[NSException raise:NSInternalInconsistencyException format:@"%s: _previewLayer does not support -captureDevicePointOfInterestForPoint:",
+			 __FUNCTION__];
 		}
 		
 		if([self.currentCamera setFocusPointOfInterest:cameraPoint withFocusMode:focusMode] == YES) {
@@ -529,7 +444,8 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 		if(_hasCaptureDevicePointOfInterestForPoint) {
 			cameraPoint = [_previewLayer captureDevicePointOfInterestForPoint:exposurePoint];
 		} else {
-			cameraPoint = [self convertToPointOfInterestFromViewCoordinates:exposurePoint];
+			[NSException raise:NSInternalInconsistencyException format:@"%s: _previewLayer does not support -captureDevicePointOfInterestForPoint:",
+			 __FUNCTION__];
 		}
 		
 		if([self.currentCamera setExposurePointOfInterest:cameraPoint withExposureMode:exposureMode]) {
