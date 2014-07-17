@@ -1,7 +1,7 @@
 //
 //  SRCameraView.m
 /*
- Copyright (c) 2012, 2013 Sean Ridenour
+ Copyright (c) 2012-2014 Sean Ridenour
  
  Permission is hereby granted, free of charge, to any person obtaining a copy of
  this software and associated documentation files (the "Software"), to deal in
@@ -452,6 +452,27 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 	}
 	
 	return success;
+}
+
+- (BOOL)setCurrentCameraFlashMode:(AVCaptureFlashMode)flashMode
+{
+	BOOL success = NO;
+	
+	if(self.currentCamera.hasFlash) {
+		self.currentCamera.flashMode = flashMode;
+		success = YES;
+	}
+	
+	return success;
+}
+
+- (AVCaptureFlashMode)currentCameraFlashMode
+{
+	if(self.currentCamera.hasFlash) {
+		return self.currentCamera.flashMode;
+	} else {
+		return AVCaptureFlashModeOff;
+	}
 }
 
 @end

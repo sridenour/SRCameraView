@@ -1,7 +1,7 @@
 //
 //  SRCameraView.h
 /*
- Copyright (c) 2012 Sean Ridenour
+ Copyright (c) 2012-2014 Sean Ridenour
  
  Permission is hereby granted, free of charge, to any person obtaining a copy of
  this software and associated documentation files (the "Software"), to deal in
@@ -66,6 +66,11 @@
 
 - (BOOL)setCurrentCameraFocusPoint:(CGPoint)focusPoint withFocusMode:(AVCaptureFocusMode)focusMode;
 - (BOOL)setCurrentCameraExposurePoint:(CGPoint)exposurePoint withExposureMode:(AVCaptureExposureMode)exposureMode;
+
+// Set flash mode for the current camera.
+// Returns YES if the flash mode could be set, NO if not (or if current camera has no flash).
+- (BOOL)setCurrentCameraFlashMode:(AVCaptureFlashMode)flashMode;
+- (AVCaptureFlashMode)currentCameraFlashMode;
 
 // Completion block will always be executed on the main thread
 - (void)takePhotoWithCompletionBlock:(void (^)(UIImage *photo, UIImage *preview))takePhotoCompletionBlock;
