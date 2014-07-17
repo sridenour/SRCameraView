@@ -69,6 +69,8 @@
 
 // Set flash mode for the current camera.
 // Returns YES if the flash mode could be set, NO if not (or if current camera has no flash).
+// An alternative to these is to use SRCamera's flashMode property, such as
+//		self.cameraView.currentCamera.flashMode = AVCaptureFlashModeOn;
 - (BOOL)setCurrentCameraFlashMode:(AVCaptureFlashMode)flashMode;
 - (AVCaptureFlashMode)currentCameraFlashMode;
 
