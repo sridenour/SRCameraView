@@ -85,7 +85,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
 	if(self = [super initWithCoder:aDecoder]) {
-		if([self sharedSetup]) {
+		if(![self sharedSetup]) {
 			return nil;
 		}
 	}
