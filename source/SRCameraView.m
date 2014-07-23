@@ -96,10 +96,13 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 {
 	[_captureSession stopRunning];
 	
-	[self removeObserver:self forKeyPath:@"focusPointOfInterestIndicator" context:kSRCameraViewObserverContext];
-	[self removeObserver:self forKeyPath:@"exposurePointOfInterestIndicator" context:kSRCameraViewObserverContext];
-	[self removeObserver:self forKeyPath:@"paused" context:kSRCameraViewObserverContext];
-	[self removeObserver:self forKeyPath:@"previewLayerGravity" context:kSRCameraViewObserverContext];
+	// If device has no camera, observers are not assigned, so we check is device has camera before (with same condition as in sharedSetup
+	if(!(_rearCamera == nil && _frontCamera ==  nil)) {
+		[self removeObserver:self forKeyPath:@"focusPointOfInterestIndicator" context:kSRCameraViewObserverContext];
+		[self removeObserver:self forKeyPath:@"exposurePointOfInterestIndicator" context:kSRCameraViewObserverContext];
+		[self removeObserver:self forKeyPath:@"paused" context:kSRCameraViewObserverContext];
+		[self removeObserver:self forKeyPath:@"previewLayerGravity" context:kSRCameraViewObserverContext];
+	}
 }
 
 - (BOOL)sharedSetup
