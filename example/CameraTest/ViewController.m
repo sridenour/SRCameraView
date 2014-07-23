@@ -55,8 +55,7 @@
 		NSLog(@"Device has camera");
 		
 		self.defaultToolbarItems = self.toolbar.items;
-		self.photoToolbarItems = [NSArray arrayWithObjects:
-								  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+		self.photoToolbarItems = @[[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
 																				target:nil
 																				action:nil],
 								  [[UIBarButtonItem alloc] initWithTitle:@"Retake"
@@ -72,8 +71,7 @@
 																  action:@selector(touchUsePhotoButton:)],
 								  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
 																				target:nil
-																				action:nil],
-								  nil];
+																				action:nil]];
 		
 		CGRect cameraFrame = self.view.bounds;
 		cameraFrame.size.height = cameraFrame.size.height - self.toolbar.frame.size.height;
