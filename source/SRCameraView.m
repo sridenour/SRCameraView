@@ -76,7 +76,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 {
     if(self = [super initWithFrame:frame]) {
 		if(![self sharedSetup]) {
-			return nil;
+			NSLog(@"Since current device has no camera, SRCameraView won't display anything and will be unsable.");
 		}
     }
     return self;
@@ -86,7 +86,7 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 {
 	if(self = [super initWithCoder:aDecoder]) {
 		if(![self sharedSetup]) {
-			return nil;
+			NSLog(@"Since current device has no camera, SRCameraView won't display anything and will be unsable.");
 		}
 	}
 	return self;
