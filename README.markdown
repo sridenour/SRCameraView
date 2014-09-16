@@ -1,7 +1,7 @@
 SRCameraView
 ============
 
-Written for the iOS 7.1 SDK, but *should* be able to be deployed as far back as iOS 6.0 (this is untested, however). There is **no** support for iOS 5.
+Written for the iOS 8.0 SDK, but *should* be able to be deployed as far back as iOS 7.1. There is no explicit support for iOS 6 or earlier, but it may work.
 
 How To Install
 --------------
