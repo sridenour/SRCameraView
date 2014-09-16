@@ -180,7 +180,7 @@
 		148F493F1617F0970014123A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0600;
 				ORGANIZATIONNAME = "Sean Ridenour";
 			};
 			buildConfigurationList = 148F49421617F0970014123A /* Build configuration list for PBXProject "CameraTest" */;
@@ -278,6 +278,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
