@@ -87,6 +87,11 @@
 		tapGesture.numberOfTapsRequired = 1;
 		tapGesture.numberOfTouchesRequired = 1;
 		[_cameraView addGestureRecognizer:tapGesture];
+		
+		// This isn't required, only use it if you need acces to the preview video frames in sampleBuffer
+		_cameraView.videoPreviewBlock = ^void(AVCaptureOutput *captureOutput, CMSampleBufferRef sampleBuffer, AVCaptureConnection *connection) {
+			// do something with sampleBuffer
+		};
 	} else {
 		NSLog(@"No camera");
 	}

@@ -48,6 +48,11 @@
 // YES = live video preview will be paused, NO = live video preview will resume
 @property (nonatomic, readwrite, assign) BOOL paused;
 
+// You can set this and SRCameraView will call it when a new video preview frame is passed to it. Don't take too long.
+// Gets called on either the main queue or the provided queue.
+@property (nonatomic, copy) void (^videoPreviewBlock)(AVCaptureOutput *, CMSampleBufferRef, AVCaptureConnection *);
+@property (nonatomic, strong) dispatch_queue_t videoPreviewQueue;
+
 // Does this device have a camera?
 + (BOOL)deviceHasCamera;
 

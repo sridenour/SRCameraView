@@ -358,6 +358,18 @@ static void *kSRCameraViewObserverContext = &kSRCameraViewObserverContext;
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 	   fromConnection:(AVCaptureConnection *)connection
 {
+	if(_videoPreviewBlock) {
+		void (^callBlock)(void) = ^void(void) {
+			_videoPreviewBlock(captureOutput, sampleBuffer, connection);
+		};
+		
+		if(_videoPreviewQueue) {
+			dispatch_async(_videoPreviewQueue, callBlock);
+		} else {
+			dispatch_async(dispatch_get_main_queue(), callBlock);
+		}
+	}
+	
 	if(_shouldCapturePreviewImage == YES) {
 		_shouldCapturePreviewImage = NO;
 		
