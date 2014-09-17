@@ -8,10 +8,10 @@ How To Install
 
 1. Create an iOS project in Xcode.
 2. Add the following frameworks:  
-	CoreGraphics (if it isn't already)
-	AVFoundation
-	CoreVideo
-	CoreMedia
+  - CoreGraphics (if it isn't already)
+  - AVFoundation
+  - CoreVideo
+  - CoreMedia
 3. Add all the files in the source/ directory to your project. Put the headers (.h) and Objective-C source (.m) in whatever group you want. Put the images (.png) in the Supporting Files group.
 
 How to Use
